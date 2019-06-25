@@ -164,7 +164,7 @@ class VKLogin extends React.Component {
             Login
           </button>
         )}
-        {this.state.errorMessage ? <p>{this.state.errorMessage}</p> : (null)}
+        {this.state.errorMessage ? <p>{this.state.errorMessage}</p> : null}
       </>
     );
   }
