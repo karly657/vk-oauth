@@ -1,4 +1,4 @@
-/* global self, location */
+/* global self */
 /* eslint no-restricted-globals: ["error"] */
 
 const CACHE = 'cache';
@@ -22,7 +22,6 @@ this.addEventListener('fetch', event => {
     caches.match(req).then(resp => {
       const newRequestTime = new Date();
       if (parseInt((newRequestTime - lastRequestTime) / 1000 / 60 / 60) <= waitHours) {
-        console.log('from cache');
         lastRequestTime = newRequestTime;
         return (
           resp || fetch(req).then(response =>
@@ -34,7 +33,6 @@ this.addEventListener('fetch', event => {
         );
       };
 
-      console.log('from new request');
       return (
         fetch(req).then(response =>
           caches.open(CACHE).then(cache => {
@@ -46,4 +44,3 @@ this.addEventListener('fetch', event => {
     })
   );
 });
-
