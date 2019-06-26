@@ -6,8 +6,7 @@ const App = () => {
     <div className="container pt-5">
       <VKLogin />
     </div>
-    
   );
-}
+};
 
 export default App;
