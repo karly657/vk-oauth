@@ -1,4 +1,7 @@
 import React from 'react';
+import UserInfo from '@/components/UserInfo';
+import FriendList from '@/components/FriendList';
+import Header from '@/components/Header';
 
 class VKLogin extends React.Component {
   constructor(props) {
@@ -10,8 +13,12 @@ class VKLogin extends React.Component {
       firstName: '',
       lastName: '',
       friendList: [],
+      friendCount: '',
       online: false,
       errorMessage: '',
+      userPicURL400: '',
+      userPicURL200: '',
+      userPicURLMax: '',
     };
   }
 
@@ -62,9 +69,9 @@ class VKLogin extends React.Component {
     window.VK.Auth.login(
       response => {
         if (response.session) {
-          console.log(response);
           this.setState({
             errorMessage: '',
+            loggedStatus: true,
           });
         } else {
           this.setState({
@@ -77,7 +84,11 @@ class VKLogin extends React.Component {
   };
 
   handleLogout = () => {
-    window.VK.Auth.logout();
+    window.VK.Auth.logout(() => {
+      this.setState({
+        loggedStatus: false,
+      });
+    });
   };
 
   getPersonalData = () => {
@@ -85,13 +96,14 @@ class VKLogin extends React.Component {
       'users.get',
       {
         user_ids: this.state.userID,
-        fields: 'photo_100,online',
+        fields: 'photo_200_orig,photo_400_orig,photo_max,online',
         v: '5.95',
       },
       r => {
         if (r.response) {
           this.setState({
-            picture: r.response[0].photo_100,
+            userPicURL400: r.response[0].photo_400_orig,
+            userPicURL200: r.response[0].photo_200_orig,
             firstName: r.response[0].first_name,
             lastName: r.response[0].last_name,
             online: r.response[0].online,
@@ -107,64 +119,49 @@ class VKLogin extends React.Component {
       {
         user_ids: this.state.userID,
         order: 'hints',
-        fields: 'first_name,last_name',
+        fields: 'first_name,last_name,photo_100',
         name_case: 'nom',
-        count: '10',
         v: '5.95',
       },
       r => {
         if (r.response) {
           this.setState({
             friendList: r.response.items,
+            count: r.response.count,
           });
         }
       }
     );
   };
 
-  showData = () => {
-    if (this.state.loggedStatus) {
-      const friends = this.state.friendList.map(friend => {
-        const fullName = `${friend.first_name} ${friend.last_name}`;
-        return <li key={friend.id}>{fullName}</li>;
-      });
-      const fullName = `${this.state.firstName} ${this.state.lastName}`;
-
-      return (
-        <div className="row">
-          <div className="col-auto">
-            <img
-              className="img-thumbnail"
-              src={this.state.picture}
-              alt="avatar"
-              width="300"
-            />
-          </div>
-          <div className="col">
-            <h3>{fullName}</h3>
-            {this.state.online ? <p>Online</p> : <p>Offline</p>}
-            <ul className="list-unstyled">{friends}</ul>
-          </div>
-        </div>
-      );
-    }
-  };
-
   render() {
     return (
       <>
         <div id="vk_api_transport" />
-        <div>{this.showData()}</div>
+        <Header
+          isLogged={this.state.loggedStatus}
+          login={this.handleLogin}
+          logout={this.handleLogout}
+        />
         {this.state.loggedStatus ? (
-          <button className="btn btn-primary" onClick={this.handleLogout}>
-            Logout
-          </button>
+          <>
+            <UserInfo
+              picture200={this.state.userPicURL200}
+              picture400={this.state.userPicURL400}
+              pictureMax={this.state.userPicURLMax}
+              online={this.state.online}
+              firstName={this.state.firstName}
+              lastName={this.state.lastName}
+            />
+            <FriendList
+              friendList={this.state.friendList}
+              count={this.state.count}
+            />
+          </>
         ) : (
-          <button className="btn btn-primary" onClick={this.handleLogin}>
-            Login
-          </button>
+          <h3>Please, log in</h3>
         )}
-        {this.state.errorMessage && <p>{this.state.errorMessage}</p>}
+        {this.state.errorMessage && <p className="text-danger">{this.state.errorMessage}</p>}
       </>
     );
   }
